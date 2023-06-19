@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>EnWords.csv</file>
+    </qresource>
+</RCC>
