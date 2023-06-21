@@ -6,6 +6,11 @@
 #include <QMessageBox>
 #include <QList>
 #include <QDebug>
+#include <QJsonObject>
+#include <QJsonDocument>
+
+#include "opedb.h"
+#include "protocol.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -17,6 +22,7 @@ class Widget : public QWidget
 
 public:
     Widget(QWidget *parent = nullptr);
+    void handleMSG();
     ~Widget();
     //上传文件
     //显示文件

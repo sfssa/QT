@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -13,7 +13,8 @@ SOURCES += \
     client.cpp
 
 HEADERS += \
-    client.h
+    client.h \
+    protocol.h
 
 FORMS += \
     widget.ui
