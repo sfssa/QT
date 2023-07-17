@@ -7,9 +7,15 @@
 #include <QList>
 #include <QDebug>
 #include <QJsonObject>
+#include <QPair>
+#include <QRandomGenerator>
+#include <QString>
+#include <QByteArray>
+#include <QDataStream>
 #include <QJsonDocument>
 
 #include "opedb.h"
+#include "thread_pool.h"
 #include "protocol.h"
 
 QT_BEGIN_NAMESPACE
@@ -23,7 +29,10 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     void handleMSG();
+    //void responseForCode(const QString& code);
     ~Widget();
+    QString generateVerificationCode(int length);
+    void sendMail(const QString& receiver,const QString& str);
     //上传文件
     //显示文件
     //下载文件
@@ -31,9 +40,13 @@ private slots:
     void on_start_clicked();
     void handleNewConnection();
     void handleOffLine();
+
 private:
     Ui::Widget *ui;
     QTcpServer* server;
     QList<QTcpSocket*>* clientSockets;
+    ThreadPool threadPool;
+    // 声明存储验证码和客户端Socket连接的容器
+    QPair<QString, QTcpSocket*> verificationCodes;
 };
 #endif // WIDGET_H

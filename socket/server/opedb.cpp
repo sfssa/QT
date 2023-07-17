@@ -5,9 +5,26 @@ opeDB::opeDB()
     init();
 }
 
-void opeDB::isExistInDB()
+bool opeDB::isExistInDB(const QString& account)
 {
+    if (db->isOpen()) {
+        QSqlQuery query;
+        query.prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+        query.addBindValue(account);
 
+        if (!query.exec()) {
+            // 查询执行失败
+            qDebug() << "Query execution failed:" << query.lastError().text();
+            return false;
+        }
+
+        if (query.next()) {
+            int count = query.value(0).toInt();
+            return (count > 0); // 返回账号是否存在的判断结果
+        }
+
+        return false;
+    }
 }
 
 void opeDB::init()

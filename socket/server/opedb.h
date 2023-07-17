@@ -2,6 +2,7 @@
 #define OPEDB_H
 #include <QSqlDatabase>
 #include <QSqlError>
+#include <QtDebug>
 #include <QSqlQuery>
 #include <QMessageBox>
 class opeDB
@@ -9,7 +10,7 @@ class opeDB
 public:
     opeDB();
     void insertInTODB();
-    void isExistInDB();
+    bool isExistInDB(const QString& account);
     void isOnline();
 private:
     void init();

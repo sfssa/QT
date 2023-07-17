@@ -16,7 +16,8 @@ SOURCES += \
 HEADERS += \
     opedb.h \
     protocol.h \
-    server.h
+    server.h \
+    thread_pool.h
 
 FORMS += \
     widget.ui

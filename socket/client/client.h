@@ -29,7 +29,8 @@ private slots:
     void on_regist_clicked();
     void sendMSG(QJsonObject& json);
     void requestRegist(QString& account,QString& passwd);
-
+    void requestForCode();
+    void handleMsgClient();
 private:
     Ui::Widget *ui;
     QTcpSocket* mySocket;
