@@ -17,6 +17,7 @@
 #include "opedb.h"
 #include "thread_pool.h"
 #include "protocol.h"
+#include "smtp.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -42,11 +43,14 @@ private slots:
     void handleOffLine();
 
 private:
+    opeDB* db;
     Ui::Widget *ui;
     QTcpServer* server;
     QList<QTcpSocket*>* clientSockets;
     ThreadPool threadPool;
     // 声明存储验证码和客户端Socket连接的容器
-    QPair<QString, QTcpSocket*> verificationCodes;
+    //QPair<QString, QTcpSocket*> verificationCodes;
+    //QList<QPair<QTcpSocket*, QString>> verificationCodes;
+    QMap<QTcpSocket*, QString>myMap;
 };
 #endif // WIDGET_H

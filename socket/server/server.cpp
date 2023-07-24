@@ -7,6 +7,7 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
     server=new QTcpServer(this);
+    db=new opeDB;
     clientSockets=new QList<QTcpSocket*>();
 }
 
@@ -22,39 +23,93 @@ void Widget::handleMSG()
         {
         case REGIST_REQUEST:
         {
+            QJsonObject data;
+            //判断验证码是否正确
+            QString value=myMap.value(clientSocket);
+            qDebug()<<"value of code is : "<<value;
+            QString conCode=jsonObj["verificationCode"].toString();
+            qDebug()<<"value of code recv is "<<conCode;
+            if(value!=conCode)
+            {
+                //验证码不正确
+                data["type"]=CODE_NONCONRECT;
+            }
+            else {
+                //调用MYSQL将数据添加到MYSQL中
+                QString account=jsonObj["account"].toString();
+                QString passwd=jsonObj["passwd"].toString();
+
+                if(db->inSertIntoDB(account,passwd))
+                {
+                    //插入成功
+                    data["type"]=REGIST_SUCCESS;
+                }
+                else
+                {
+                    //插入失败
+                    data["type"]=REGIST_FAILED;
+                }
+            }
+            QJsonDocument doc(data);
+            QByteArray jsonData=doc.toJson();
+            clientSocket->write(jsonData);
+            if(!clientSocket->waitForBytesWritten())
+            {
+                qDebug()<<"发送regist_success失败";
+            }
             qDebug()<<"滴滴滴滴滴"<<type;
             break;
         }
         case REQUEST_CODE:
         {
-
-            qDebug()<<"接收到验证码请求";
-            //生成验证码并获得客户端socket后保存
-            // 生成长度为6的验证码
-            QString code = generateVerificationCode(6);
-            QTcpSocket* curentSocket=qobject_cast<QTcpSocket*>(sender());
-            verificationCodes.first=code;
-            verificationCodes.second=curentSocket;
+            //QTcpSocket* curentSocket=qobject_cast<QTcpSocket*>(sender());
             QString receiver=jsonObj["receiver"].toString();
-            QString emailContent = QString("Your confirm code is ：%1").arg(code);
-            sendMail(receiver,emailContent);
-            QJsonObject data;
-            data["type"]=RESPONSE_CODE;
-            //data["code"]=code;
-            QJsonDocument doc(data);
-            QByteArray jsonData=doc.toJson();
-            curentSocket->write(jsonData);
-            if(!curentSocket->waitForBytesWritten())
+            //检查账户是否存在
+            if(db->isExistInDB(receiver))
             {
-                qDebug()<<"回传验证码失败";
-                QMessageBox::warning(this,"发送","发送失败！");
+                qDebug()<<"账号已经存在";
+                QJsonObject data;
+                data["type"]=RESPONSE_CODE_ISEXIST;
+                QJsonDocument doc(data);
+                QByteArray jsonData=doc.toJson();
+                clientSocket->write(jsonData);
+                if(!clientSocket->waitForBytesWritten())
+                {
+                    delete clientSocket;
+                }
                 return;
             }
-            delete curentSocket;
+            else
+            {
+                qDebug()<<"接收到验证码请求";
+                //生成验证码并获得客户端socket后保存
+                // 生成长度为6的验证码
+                QString code = generateVerificationCode(6);
+                qDebug()<<"滴滴滴滴滴"<<code;
+
+                //verificationCodes.first=clientSocket;
+                //verificationCodes.second=code;
+                myMap.insert(clientSocket,code);
+                QString emailContent = QString("Your confirm code is ：%1").arg(code);
+                Smtp *sendMail=new Smtp;
+                if(sendMail->Send(receiver,"Confirm Code",emailContent))
+                {
+                    if(sendMail->PutSendLine())
+                    {
+                        qDebug()<<"发送成功！";
+                    }
+                    else
+                    {
+                        qDebug()<<"发送失败！";
+                    }
+                }
+            }
         }
         default:
             break;
         }
+        if(clientSocket)
+            delete clientSocket;
     }
 }
 

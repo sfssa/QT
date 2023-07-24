@@ -53,9 +53,14 @@ void Widget::on_regist_clicked()
 
     QPushButton *sendCodeButton = new QPushButton("发送验证码",registerWidget);
     connect(sendCodeButton,&QPushButton::clicked,[=](){
+        QTimer *timer= new QTimer(this);
+        timer->setInterval(60000);
         sendCodeButton->setEnabled(false);
+        timer->start();
+        connect(timer, &QTimer::timeout,[=](){
+           sendCodeButton->setEnabled(true);
+        });
     });
-
     //这里两个先后顺序不能变，否则在requestForCode里的myAccount是空指针
     connect(sendCodeButton,&QPushButton::clicked,[=]{
        QString account=accountLineEdit->text();
@@ -121,7 +126,7 @@ void Widget::on_regist_clicked()
         }
         myNickName=new QString(nickname.toUtf8().constData());
         myAccount=new QString(account.toUtf8().constData());
-        requestRegist(account,password);
+        requestRegist(account,password,verificationCode);
 
     });
     //connect(registerWidget,&QWidget::destroyed,this,&Widget::show);
@@ -149,13 +154,14 @@ void Widget::sendMSG(QJsonObject& data)
     }
 }
 
-void Widget::requestRegist(QString &account, QString &passwd)
+void Widget::requestRegist(QString &account, QString &passwd,QString& verificationCode)
 {
     //将账户和密码发送到服务器
     QJsonObject data;
     data["type"]=REGIST_REQUEST;
     data["account"]=account;
     data["passwd"]=passwd;
+    data["verificationCode"]=verificationCode;
     QJsonDocument doc(data);
     QByteArray jsonData=doc.toJson();
     mySocket->write(jsonData);
@@ -168,35 +174,50 @@ void Widget::requestRegist(QString &account, QString &passwd)
 
 void Widget::requestForCode()
 {
-    qDebug()<<"顶顶顶顶顶顶顶0";
     QJsonObject data;
-    qDebug()<<"顶顶顶顶顶顶顶1";
     data["type"]=REQUEST_CODE;
-    qDebug()<<"顶顶顶顶顶顶顶2";
     //qDebug()<<myAccount;
     //qDebug()<<*myAccount;
     //QString str=*myAccount;
     data["receiver"]=(*myAccount);
-    qDebug()<<"顶顶顶顶顶顶顶3";
     QJsonDocument doc(data);
-    qDebug()<<"顶顶顶顶顶顶顶4";
     QByteArray jsonData=doc.toJson();
-    qDebug()<<"顶顶顶顶顶顶顶5";
     mySocket->write(jsonData);
-    qDebug()<<"顶顶顶顶顶顶顶6";
     // 确认数据已发送完毕
     if (!mySocket->waitForBytesWritten()) {
-        qDebug()<<"顶顶顶顶顶顶顶7";
         QMessageBox::warning(this,"发送","发送失败！");
         return;
     }
-    qDebug()<<"顶顶顶顶顶顶顶8";
     qDebug()<<"验证码请求申请发送完毕";
 }
 
 void Widget::handleMsgClient()
 {
     qDebug()<<"收到信息！"<<endl;
+    QByteArray data = mySocket->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    QJsonObject jsonObj=doc.object();
+    int type=jsonObj["type"].toInt();
+    switch(type)
+    {
+    case RESPONSE_CODE_ISEXIST:
+    {
+        QMessageBox::warning(NULL,"注册","账号已存在！");
+        break;
+    }
+    case REGIST_SUCCESS:
+    {
+        QMessageBox::information(nullptr,"注册","注册成功！");
+        break;
+    }
+    case REGIST_FAILED:
+    {
+        QMessageBox::warning(nullptr,"注册","注册失败！请检查网络！");
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 

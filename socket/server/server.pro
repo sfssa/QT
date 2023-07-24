@@ -11,12 +11,14 @@ CONFIG += c++11
 SOURCES += \
     main.cpp \
     opedb.cpp \
-    server.cpp
+    server.cpp \
+    smtp.cpp
 
 HEADERS += \
     opedb.h \
     protocol.h \
     server.h \
+    smtp.h \
     thread_pool.h
 
 FORMS += \

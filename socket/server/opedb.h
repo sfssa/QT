@@ -12,6 +12,7 @@ public:
     void insertInTODB();
     bool isExistInDB(const QString& account);
     void isOnline();
+    bool inSertIntoDB(const QString account,const QString passwd);
 private:
     void init();
     ~opeDB();

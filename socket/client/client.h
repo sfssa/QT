@@ -10,6 +10,7 @@
 #include <QRegularExpression>
 #include <QLineEdit>
 #include <QLabel>
+#include <QTimer>
 #include <QJsonObject>
 #include <QJsonDocument>
 
@@ -28,9 +29,11 @@ public:
 private slots:
     void on_regist_clicked();
     void sendMSG(QJsonObject& json);
-    void requestRegist(QString& account,QString& passwd);
+    void requestRegist(QString& account,QString& passwd,QString& verificationCode);
     void requestForCode();
     void handleMsgClient();
+signals:
+    void updateButtonState();
 private:
     Ui::Widget *ui;
     QTcpSocket* mySocket;
