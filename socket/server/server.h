@@ -43,6 +43,7 @@ private slots:
     void handleOffLine();
 
 private:
+    QTcpSocket *clientSocket;
     opeDB* db;
     Ui::Widget *ui;
     QTcpServer* server;

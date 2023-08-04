@@ -13,6 +13,9 @@
 #include <QTimer>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include "myfile.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -27,20 +30,41 @@ public:
     ~Widget();
 
 private slots:
-    void on_regist_clicked();
-    void sendMSG(QJsonObject& json);
+    //void on_regist_clicked();
+    void sendMSG(const QJsonObject& json);
     void requestRegist(QString& account,QString& passwd,QString& verificationCode);
-    void requestForCode();
+    bool requestForCode();
     void handleMsgClient();
+    //void on_login_clicked();
+    //void handleLogin();
+    void on_yes_clicked();
+    void onComboBoxIndexChanged(int index);
+
 signals:
     void updateButtonState();
+    void loginSuccess();
 private:
     Ui::Widget *ui;
     QTcpSocket* mySocket;
     QString* myAccount;
     QString* myNickName;
-    QWidget* registerWidget;
+    //QWidget* registerWidget;
+    MyFile* myFile;
+    //登录界面控件
+    QLabel *accountLabel ;
+    QLabel *nickNameLabel ;
+    //QLabel *codeLable;
+    QLabel *passwordLabel ;
+    QLabel *confirmPasswordLabel;
+    //注册界面的控件
 
+    QLineEdit *nicknameLineEdit;
+    QLineEdit *accountLineEdit;
+    QLineEdit *passwordLineEdit;
+    QLineEdit *confirmPasswordLineEdit;
+    QPushButton *sendVerificationCodeButton;
+    QLineEdit *verificationCodeLineEdit;
+    QPushButton *registerButton;
 
 };
 #endif // WIDGET_H

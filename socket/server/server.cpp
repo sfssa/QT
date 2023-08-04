@@ -13,12 +13,13 @@ Widget::Widget(QWidget *parent)
 
 void Widget::handleMSG()
 {
-    QTcpSocket *clientSocket = qobject_cast<QTcpSocket *>(sender());
+    clientSocket = qobject_cast<QTcpSocket *>(sender());
     if (clientSocket) {
         QByteArray data = clientSocket->readAll();
         QJsonDocument doc = QJsonDocument::fromJson(data);
         QJsonObject jsonObj=doc.object();
         int type=jsonObj["type"].toInt();
+        qDebug()<<"current type is :"<<type;
         switch(type)
         {
         case REGIST_REQUEST:
@@ -73,10 +74,7 @@ void Widget::handleMSG()
                 QJsonDocument doc(data);
                 QByteArray jsonData=doc.toJson();
                 clientSocket->write(jsonData);
-                if(!clientSocket->waitForBytesWritten())
-                {
-                    delete clientSocket;
-                }
+                clientSocket->waitForBytesWritten();
                 return;
             }
             else
@@ -86,7 +84,7 @@ void Widget::handleMSG()
                 // 生成长度为6的验证码
                 QString code = generateVerificationCode(6);
                 qDebug()<<"滴滴滴滴滴"<<code;
-
+                qDebug()<<code;
                 //verificationCodes.first=clientSocket;
                 //verificationCodes.second=code;
                 myMap.insert(clientSocket,code);
@@ -105,11 +103,36 @@ void Widget::handleMSG()
                 }
             }
         }
+        case LOGIN_REQUEST:
+        {
+            QJsonObject data;
+            //检查account是否正确后检查密码是否正确
+            QString account=jsonObj["account"].toString();
+            if(db->isExistInDB(account))
+            {
+                //后检查密码是否正确
+                QString passwd=jsonObj["passwd"].toString();
+                if(db->checkAccount(account,passwd))
+                {
+                    qDebug()<<"LOGIN_SUCCESS";
+                    data["type"]=LOGIN_SUCCESS;
+                }
+                else
+                {
+                    qDebug()<<"LOGIN_FAILED_ACCOUNT_OR_PASSWD";
+                    data["type"]=LOGIN_FAILED_ACCOUNT_OR_PASSWD;
+                }
+            }
+            else
+                data["type"]=LOGIN_FAILED_NOT_REGIST;
+            QJsonDocument doc(data);
+            QByteArray jsonData=doc.toJson();
+            clientSocket->write(jsonData);
+            clientSocket->waitForBytesWritten();
+        }
         default:
             break;
         }
-        if(clientSocket)
-            delete clientSocket;
     }
 }
 
@@ -126,6 +149,7 @@ void Widget::handleMSG()
 Widget::~Widget()
 {
     server->close();
+    delete clientSocket;
     delete ui;
     delete server;
     threadPool.shutdown();
@@ -200,7 +224,7 @@ void Widget::on_start_clicked()
     {
         qDebug()<<"服务器开启成功！正在监听连接...";
         //绑定连接和断开连接的槽函数
-        connect(server, &QTcpServer::newConnection, this, &Widget::handleNewConnection);        
+        connect(server, &QTcpServer::newConnection, this, &Widget::handleNewConnection);
         ui->start->setEnabled(false);
 
     }else
